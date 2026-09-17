@@ -10,12 +10,13 @@ La aplicación permite:
 - Escribir una descripción breve.
 - Mostrar un logo en la pantalla principal.
 - Crear un reporte de forma básica.
-- Mostrar un mensaje al usuario cuando se presiona el botón.
+- Mostrar un mensaje cuando se presiona el botón.
 - Avisar si algún campo está vacío.
+- Utilizar un fondo gris en la pantalla principal.
 
 ## Estado de la aplicación
 
-La aplicación utiliza variables de estado para guardar temporalmente la información que escribe el usuario.
+La aplicación utiliza variables de estado para guardar temporalmente lo que escribe el usuario.
 
 Se utilizan:
 
@@ -23,6 +24,19 @@ Se utilizan:
 - `mutableStateOf`
 
 Por el momento, la información no se guarda en una base de datos.
+
+## Diseño
+
+La pantalla principal contiene:
+
+- Logo de la aplicación.
+- Título de la aplicación.
+- Instrucción para el usuario.
+- Campo para el título de la incidencia.
+- Campo para la descripción.
+- Botón **Crear reporte**.
+- Mensaje de estado.
+- Fondo gris claro.
 
 ## Tecnologías usadas
 
@@ -37,7 +51,7 @@ Por el momento, la información no se guarda en una base de datos.
 
 1. Abrir la aplicación.
 2. Escribir el título de la incidencia.
-3. Escribir una descripción.
+3. Escribir una descripción breve.
 4. Presionar el botón **Crear reporte**.
 5. La aplicación mostrará un mensaje con el resultado.
 
