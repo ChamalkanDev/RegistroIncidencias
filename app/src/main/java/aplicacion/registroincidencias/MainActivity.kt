@@ -27,6 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import aplicacion.registroincidencias.ui.theme.RegistroIncidenciasTheme
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
 
@@ -56,6 +58,7 @@ fun RegistroIncidenciasApp() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFE0E0E0))
             .padding(24.dp),
 
         horizontalAlignment = Alignment.CenterHorizontally,
