@@ -3,35 +3,36 @@ package aplicacion.registroincidencias
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import aplicacion.registroincidencias.ui.theme.RegistroIncidenciasTheme
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.unit.dp
-import aplicacion.registroincidencias.ui.theme.RegistroIncidenciasTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import aplicacion.registroincidencias.ui.theme.RegistroIncidenciasTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             RegistroIncidenciasTheme {
                 RegistroIncidenciasApp()
@@ -43,89 +44,99 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RegistroIncidenciasApp() {
 
-    var equipo by remember { mutableStateOf("") }
+    // Variables para guardar lo que escribe el usuario
+    var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
-    var estado by remember { mutableStateOf("No hay mantenimiento registrado.") }
+
+    // Mensaje que se mostrará después de presionar el botón
+    var mensaje by remember {
+        mutableStateOf("Aún no hay reporte creado")
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
 
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text(
-            text = "Registro de mantenimiento",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Ingrese los datos del equipo que necesita mantenimiento."
+        // Logo de la aplicación
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo de la aplicación",
+            modifier = Modifier.size(120.dp)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Título
+        Text(
+            text = "Registro de Incidencias",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Instrucción
+        Text(
+            text = "Complete los datos para crear un reporte."
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Campo para el título
         OutlinedTextField(
-            value = equipo,
-            onValueChange = { equipo = it },
+            value = titulo,
+            onValueChange = {
+                titulo = it
+            },
             label = {
-                Text("Nombre del equipo")
+                Text("Título de la incidencia")
             },
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(15.dp))
 
+        // Campo para la descripción
         OutlinedTextField(
             value = descripcion,
-            onValueChange = { descripcion = it },
+            onValueChange = {
+                descripcion = it
+            },
             label = {
-                Text("Descripción del problema")
+                Text("Descripción breve")
             },
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Botón principal
         Button(
             onClick = {
-                estado = "Mantenimiento registrado."
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Registrar mantenimiento")
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+                if (titulo.isNotEmpty() && descripcion.isNotEmpty()) {
 
-        Card(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
+                    mensaje = "Reporte preparado: $titulo"
 
-                Text(
-                    text = "Estado",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                } else {
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(text = estado)
+                    mensaje = "Complete todos los campos"
+                }
             }
+        ) {
+            Text("Crear reporte")
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun RegistroIncidenciasPreview() {
-    RegistroIncidenciasTheme {
-        RegistroIncidenciasApp()
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Mensaje de retroalimentación
+        Text(
+            text = mensaje
+        )
     }
 }
