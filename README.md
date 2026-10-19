@@ -4,9 +4,9 @@ Este proyecto es una aplicación Android desarrollada en Kotlin utilizando Jetpa
 
 La aplicación permite ingresar información sobre una falla, seleccionar el tipo de problema, establecer su prioridad y generar un reporte con un mensaje de confirmación.
 
-Como parte de una nueva práctica, se agregó el uso del **acelerómetro del teléfono Android**, que permite detectar los movimientos del dispositivo e identificar su orientación aproximada.
+Como parte de una nueva práctica, se agregó una sección de **Diagnóstico** con una lista de hasta cinco sensores disponibles. Cada sensor tiene una pantalla de prueba donde se muestran sus datos y un mensaje que ayuda a entender la lectura.
 
-Con esta mejora se busca conocer cómo funcionan los sensores de Android y cómo se pueden integrar en una aplicación.
+Con esta mejora se busca conocer cómo funcionan los sensores de Android, cómo mostrar sus lecturas y cómo detener la escucha cuando ya no se necesita. Las pruebas duran como máximo **cinco segundos**.
 
 ## Funciones
 
@@ -25,7 +25,14 @@ La aplicación permite:
 - Detectar movimientos e inclinaciones del teléfono utilizando el acelerómetro.
 - Mostrar los valores de aceleración de los ejes X, Y y Z.
 - Identificar aproximadamente la orientación del dispositivo.
-- Mostrar la orientación del teléfono en un panel inferior.
+- Mostrar la orientación y los ejes del acelerómetro dentro de su pantalla de prueba.
+- Acceder al diagnóstico mediante un botón en la pantalla principal.
+- Mostrar un botón por cada sensor disponible, con un máximo de cinco.
+- Abrir una pantalla independiente para probar el sensor seleccionado.
+- Consultar el sensor de luz, proximidad, giroscopio y campo magnético, si están disponibles.
+- Mostrar mensajes como “Movimiento detectado”, “Objeto cercano” o “Ambiente con mucha luz”.
+- Detener la escucha después de cinco segundos, al salir de la prueba o al pausar la aplicación.
+- Repetir la prueba y regresar a la lista de sensores.
 
 ## Entrada de texto
 
@@ -68,9 +75,47 @@ Por ejemplo:
 
 Para estas opciones no fue necesario utilizar `pointerInput`, porque solamente se requiere detectar un toque simple.
 
+## Diagnóstico del dispositivo
+
+La sección de diagnóstico se organizó en tres pantallas:
+
+1. **Pantalla principal:** contiene el formulario y el botón **Diagnóstico**. El acelerómetro ya no se muestra ni se escucha desde esta pantalla.
+2. **Lista de sensores:** muestra hasta cinco botones, uno por cada sensor disponible entre los seleccionados para la práctica. En esta pantalla todavía no se reciben lecturas.
+3. **Pantalla de prueba:** se abre al tocar un sensor. Muestra su nombre, sus datos, un mensaje de interpretación y los botones **Repetir prueba** y **Volver a sensores**.
+
+Desde la lista se puede pulsar **Volver al inicio**. El botón Atrás del teléfono también permite regresar de la prueba a la lista y de la lista al formulario.
+
+Se utilizaron funciones `@Composable` y variables de estado para cambiar de pantalla de una forma sencilla:
+
+- `PantallaDiagnostico`: controla si se muestra la lista o la prueba.
+- `PantallaListaSensores`: presenta los botones de los sensores disponibles.
+- `PantallaPruebaSensor`: muestra la pantalla del sensor seleccionado.
+- `PruebaSensor`: recibe e interpreta las lecturas y controla cuándo se detienen.
+
+### Sensores incluidos
+
+| Sensor | Para qué se utiliza | Información que muestra |
+| --- | --- | --- |
+| Acelerómetro | Detectar movimiento y estimar la orientación del teléfono. | Ejes X, Y y Z en m/s², orientación aproximada y mensajes de movimiento. |
+| Luz | Reconocer la iluminación del ambiente. | Lectura en lux y mensajes de poca luz, luz moderada o mucha luz. |
+| Proximidad | Detectar objetos cercanos al dispositivo. | Mensajes como “Objeto cercano” o “Sin objeto cercano”. |
+| Giroscopio | Detectar giros del teléfono. | Valores de los tres ejes en rad/s y mensajes de giro. |
+| Campo magnético | Medir el campo magnético alrededor del teléfono. | Valores de los tres ejes en microteslas y el mensaje “Campo magnético detectado”. |
+
+La aplicación revisa cada tipo mediante `getDefaultSensor`. Si el equipo no tiene alguno, ese sensor no aparece en la lista. Por eso pueden mostrarse menos de cinco botones. Si no se encuentra ninguno de los cinco tipos, se muestra un mensaje indicando que no hay sensores disponibles.
+
+### Cómo entrar a una prueba
+
+1. Abrir la aplicación y pulsar **Diagnóstico**.
+2. Elegir uno de los sensores que aparecen en la lista.
+3. Realizar la acción correspondiente, como mover el teléfono o cubrir el sensor de luz.
+4. Observar los datos y el mensaje durante los cinco segundos de la prueba.
+5. Pulsar **Repetir prueba** si se necesita otra lectura.
+6. Pulsar **Volver a sensores** para elegir otro sensor.
+
 ## Uso del sensor acelerómetro
 
-Durante esta práctica se incorporó el acelerómetro del teléfono Android para detectar sus movimientos e identificar su orientación aproximada.
+El acelerómetro se utiliza dentro de **Diagnóstico → Acelerómetro** para detectar movimientos e identificar la orientación aproximada del teléfono.
 
 El acelerómetro es un sensor que mide la aceleración en tres ejes, incluyendo el efecto de la gravedad.
 
@@ -138,11 +183,11 @@ Para determinar estas posiciones se utilizan comparaciones entre los valores de 
 
 También se utiliza la función `abs()` para obtener valores absolutos y comparar las aceleraciones.
 
-La aplicación muestra la posición detectada en un panel ubicado en la parte inferior de la pantalla.
+La aplicación muestra la orientación detectada en el panel `PanelPosicion`, dentro de la pantalla de prueba del acelerómetro. Este panel no aparece en el formulario principal.
 
 ### Panel de posición del teléfono
 
-Se creó un componente llamado `PanelPosicion`, que se encarga de mostrar la información del acelerómetro.
+El componente `PanelPosicion` muestra la información del acelerómetro usando las mismas lecturas de la prueba, sin registrar un segundo listener.
 
 Este panel contiene:
 
@@ -166,38 +211,71 @@ X: 0.12   Y: 0.35   Z: 9.75
 
 Los valores anteriores son solamente un ejemplo. Los resultados reales cambian según el movimiento y la inclinación del teléfono.
 
-### Manejo del sensor
+## Registro y liberación de los sensores
 
-Para evitar problemas con el registro del sensor se utilizó `DisposableEffect`.
+Para evitar que los sensores se queden escuchando indefinidamente, la aplicación registra solamente el sensor seleccionado cuando se abre su pantalla de prueba.
 
-Dentro de este bloque se registra el listener mediante `registerListener` y se elimina utilizando `unregisterListener`.
+El proceso es el siguiente:
 
-También se verifica que el dispositivo tenga un acelerómetro disponible.
+1. Obtener el sensor disponible con `SensorManager`.
+2. Registrar un `SensorEventListener` con `registerListener` y `SENSOR_DELAY_NORMAL`.
+3. Recibir los datos en `onSensorChanged` y actualizar la pantalla.
+4. Programar con un `Handler` la función `detener` después de **5000 milisegundos**.
+5. Llamar a `unregisterListener(listener)` para dejar de recibir eventos y cancelar las tareas pendientes del temporizador.
 
-Si el teléfono no cuenta con este sensor, la aplicación muestra el mensaje:
+El temporizador no se reinicia cada vez que llega una lectura. Al finalizar, el último resultado permanece visible, pero la aplicación deja de recibir datos nuevos.
 
-`Sensor no disponible`
+También se libera el recurso en estos casos:
 
-De esta manera se evita intentar registrar un sensor inexistente.
+- Al pausar o minimizar la aplicación, mediante `Lifecycle.Event.ON_PAUSE`.
+- Al salir de la pantalla de prueba, mediante `onDispose` de `DisposableEffect`.
+- Al repetir la prueba, liberando primero la escucha anterior.
+
+Después de una pausa, la lectura no se reactiva automáticamente: el usuario puede pulsar **Repetir prueba**. Esto evita mantener escuchas innecesarias o acumular varios listeners.
+
+Si el sensor no entrega datos durante la prueba, aparece **Sin lectura disponible**. Si el registro requiere un permiso que no se tiene, la aplicación también informa que no puede obtener la lectura.
 
 ## Pruebas del acelerómetro
 
-Para verificar el funcionamiento del acelerómetro se debe ejecutar la aplicación en un teléfono Android que tenga este sensor.
+Para comprobar el acelerómetro se puede usar un teléfono compatible o un emulador que permita simularlo.
 
-El procedimiento de prueba es el siguiente:
+El procedimiento propuesto es el siguiente:
 
-1. Abrir la aplicación Registro de Incidencias.
-2. Observar el panel de posición ubicado en la parte inferior.
-3. Revisar los valores de los ejes X, Y y Z.
-4. Colocar el teléfono sobre una superficie plana con la pantalla hacia arriba.
-5. Girarlo para colocar la pantalla hacia abajo.
-6. Sostener el teléfono verticalmente.
-7. Girarlo en posición vertical invertida.
-8. Inclinarlo hacia el lado izquierdo.
-9. Inclinarlo hacia el lado derecho.
-10. Verificar que los valores y el texto de posición respondan a los cambios de orientación.
+1. Abrir la aplicación y pulsar **Diagnóstico**.
+2. Seleccionar **Acelerómetro**.
+3. Revisar los valores X, Y y Z en la pantalla de prueba.
+4. Colocar el teléfono sobre una superficie plana, primero con la pantalla hacia arriba y después hacia abajo.
+5. Sostenerlo verticalmente y luego en posición vertical invertida.
+6. Girarlo hacia el lado izquierdo y hacia el derecho.
+7. Moverlo suavemente y observar los mensajes de movimiento.
+8. Verificar que los datos dejen de cambiar al finalizar los cinco segundos.
+9. Pulsar **Repetir prueba** para comprobar otra orientación o movimiento.
 
-Estas pruebas permiten comprobar la lectura del sensor y verificar si la orientación mostrada corresponde aproximadamente con la posición del dispositivo.
+Estas acciones permiten comparar la orientación mostrada con la forma en que está colocado el dispositivo. Los valores recibidos incluyen la gravedad, por lo que pueden ser distintos de cero aunque el teléfono esté quieto.
+
+## Pruebas de los otros sensores
+
+- **Luz:** cubrir y descubrir el sensor o cambiar la iluminación; observar la lectura en lux y su mensaje.
+- **Proximidad:** acercar y retirar la mano de la parte superior del teléfono; revisar si cambia entre cerca y lejos.
+- **Giroscopio:** girar el teléfono suavemente; observar los valores y el mensaje de giro.
+- **Campo magnético:** cambiar la orientación del teléfono y comparar las lecturas en lugares con distintas interferencias.
+
+Para todos los sensores se debe comprobar que la prueba se detenga al terminar los cinco segundos, volver a la lista o minimizar la aplicación. También conviene repetirla varias veces para revisar que no se acumulen escuchas.
+
+Las acciones anteriores son una guía de verificación. Para documentar una prueba realizada, se debe indicar el dispositivo utilizado, el sensor, la acción, el resultado observado y una captura de pantalla.
+
+## Uso del emulador y sus limitaciones
+
+El emulador de Android permite simular algunos sensores desde **Extended controls → Virtual sensors**. Los controles disponibles dependen del dispositivo virtual y su configuración.
+
+Sus principales limitaciones para esta práctica son:
+
+- Los valores son simulados y no representan directamente el ambiente de la computadora.
+- Acercar la mano al monitor o mover el mouse no equivale a activar los sensores de un teléfono.
+- Algunos sensores pueden no estar disponibles en el dispositivo virtual.
+- La simulación no confirma por sí sola la precisión ni las interferencias de un sensor físico.
+
+En un teléfono real probaría movimientos, giros, cambios de iluminación y acercamiento de objetos. También comprobaría la liberación del recurso al salir de la prueba y al pausar la aplicación.
 
 ## Propósito del acelerómetro
 
@@ -227,7 +305,7 @@ Como mejora futura se podría incorporar un indicador gráfico que represente la
 
 También se podría combinar el acelerómetro con otros sensores, como el giroscopio, para mejorar la precisión de la orientación.
 
-Otra mejora sería optimizar el manejo del sensor para que su lectura se suspenda cuando la aplicación pase a segundo plano.
+Otra mejora sería guardar un pequeño historial de las pruebas para comparar sus resultados. La suspensión de la lectura al pasar a segundo plano ya está implementada.
 
 ## Estado de la aplicación
 
@@ -236,7 +314,10 @@ La aplicación utiliza variables de estado para almacenar temporalmente la infor
 Se utilizan principalmente:
 
 - `remember`
+- `rememberSaveable`
 - `mutableStateOf`
+- `mutableFloatStateOf`
+- `mutableIntStateOf`
 
 Las variables almacenan:
 
@@ -245,9 +326,11 @@ Las variables almacenan:
 - Tipo de problema.
 - Prioridad.
 - Mensaje de retroalimentación.
+- Pantalla de diagnóstico y sensor seleccionado.
+- Intento de prueba y mensaje del sensor.
 - Valores del acelerómetro en los ejes X, Y y Z.
 
-La aplicación también calcula la orientación aproximada utilizando los valores recibidos del sensor.
+La aplicación también calcula la orientación aproximada utilizando los valores del acelerómetro. Los campos del formulario usan `rememberSaveable` para conservar la información al volver de diagnóstico y ante recreaciones de la actividad.
 
 Por el momento, los reportes no se guardan en una base de datos.
 
@@ -266,8 +349,7 @@ La pantalla principal contiene:
 - Indicador de la prioridad seleccionada.
 - Botón **Registrar problema**.
 - Mensaje de retroalimentación.
-- Panel inferior con la posición del teléfono.
-- Valores X, Y y Z del acelerómetro.
+- Botón **Diagnóstico** para entrar a la lista de sensores.
 - Fondo gris claro.
 
 Se utilizaron componentes de Material Design 3 para mantener una interfaz sencilla y organizada.
@@ -283,8 +365,10 @@ Se utilizaron componentes de Material Design 3 para mantener una interfaz sencil
 7. Seleccionar la prioridad: Baja, Media o Alta.
 8. Presionar el botón **Registrar problema**.
 9. Observar el mensaje de confirmación.
-10. Revisar el panel del acelerómetro.
-11. Mover o inclinar el teléfono para observar los cambios de orientación.
+10. Pulsar **Diagnóstico** para abrir la lista de sensores.
+11. Seleccionar un sensor para abrir su pantalla de prueba.
+12. Realizar la prueba y observar los datos y mensajes.
+13. Pulsar **Repetir prueba** o **Volver a sensores** según se necesite.
 
 Ejemplo de reporte:
 
@@ -312,9 +396,16 @@ Durante el desarrollo se realizaron las siguientes mejoras:
 - Se incorporó el acelerómetro del teléfono Android.
 - Se implementó la lectura de los ejes X, Y y Z.
 - Se agregó el reconocimiento aproximado de seis orientaciones del dispositivo.
-- Se creó un panel inferior para mostrar los datos del sensor.
+- Se creó un panel para mostrar los datos del acelerómetro y se trasladó a su pantalla de prueba.
 - Se utilizó `DisposableEffect` para controlar el registro y la eliminación del listener.
-- Se agregó la verificación de disponibilidad del acelerómetro.
+- Se agregó la verificación de disponibilidad de los cinco tipos de sensores.
+- Se agregó el botón **Diagnóstico** a la pantalla principal.
+- Se separaron la lista de sensores y la pantalla de prueba individual.
+- Se incorporaron luz, proximidad, giroscopio y campo magnético.
+- Se agregaron mensajes para interpretar las lecturas.
+- Se limitaron las pruebas a cinco segundos.
+- Se agregó la liberación del recurso al pausar la aplicación o salir de la prueba.
+- Se incorporaron los botones para repetir las pruebas y regresar entre pantallas.
 
 ## Dificultades encontradas y cómo fueron abordadas
 
@@ -354,6 +445,12 @@ Esto se resolvió utilizando condiciones que comparan las aceleraciones de los d
 
 Finalmente, se implementó `DisposableEffect` para administrar el listener del sensor dentro de Jetpack Compose.
 
+### Pantallas de diagnóstico y tiempo de escucha
+
+Fue necesario separar la lista de sensores de la pantalla donde se realiza cada prueba. Para hacerlo se utilizaron variables de estado y funciones `@Composable`.
+
+También se agregó un límite de cinco segundos con `Handler` y una función `detener` que libera el listener. El ciclo de vida y `onDispose` permiten detener la lectura cuando la pantalla deja de usarse.
+
 ## Tecnologías utilizadas
 
 - Kotlin.
@@ -363,6 +460,9 @@ Finalmente, se implementó `DisposableEffect` para administrar el listener del s
 - Android Sensor Framework.
 - SensorManager.
 - SensorEventListener.
+- LifecycleEventObserver.
+- DisposableEffect.
+- Handler.
 - Git.
 - GitHub.
 
@@ -371,15 +471,16 @@ Finalmente, se implementó `DisposableEffect` para administrar el listener del s
 1. Abrir el proyecto en Android Studio.
 2. Esperar que Gradle termine de cargar.
 3. Verificar que el proyecto compile correctamente.
-4. Conectar un teléfono Android con acelerómetro o configurar un emulador compatible.
+4. Conectar un teléfono Android o configurar un emulador compatible con sensores virtuales.
 5. Seleccionar el dispositivo de ejecución.
 6. Presionar **Run**.
 7. Probar los campos del formulario.
 8. Seleccionar el tipo de problema y la prioridad.
 9. Registrar un problema.
-10. Revisar el panel de posición del teléfono.
-11. Mover el dispositivo y observar los valores del acelerómetro.
-12. Comprobar que el texto de orientación cambie según la posición.
+10. Pulsar **Diagnóstico** y revisar los sensores disponibles.
+11. Seleccionar un sensor para abrir su pantalla de prueba.
+12. Realizar la acción correspondiente y observar sus datos.
+13. Comprobar el límite de cinco segundos y los botones para repetir y volver.
 
 ## Control de versiones
 
@@ -395,23 +496,23 @@ Después de modificar el código y actualizar el README se utilizan los siguient
 
 ```bash
 git add .
-git commit -m "Agregar acelerometro y deteccion de posicion del telefono"
+git commit -m "Agregar pantallas de diagnostico y pruebas de sensores"
 git push
 ```
 
 Estos comandos permiten registrar los cambios realizados y subirlos al repositorio de GitHub.
 
-La actualización incluye la integración del acelerómetro, la lectura de los ejes X, Y y Z y la detección aproximada de la orientación del teléfono.
+Esta actualización incluye las pantallas de diagnóstico, la lista de hasta cinco sensores, las pruebas individuales y el control del tiempo de escucha. Los comandos anteriores se ejecutan desde la carpeta del repositorio cuando los cambios estén listos para subir.
 
 ## Conclusión
 
-Con esta práctica se logró ampliar las funciones de la aplicación Registro de Incidencias mediante la integración del acelerómetro de un teléfono Android.
+Con esta práctica se amplió la aplicación Registro de Incidencias mediante una sección de diagnóstico con hasta cinco sensores disponibles.
 
-Durante el desarrollo se aprendió a obtener los valores de aceleración de los ejes X, Y y Z utilizando `SensorManager` y `SensorEventListener`.
+Se organizaron tres pantallas: el formulario principal, la lista de sensores y la prueba del sensor seleccionado. Las lecturas se acompañan de mensajes sencillos para entender mejor los datos.
 
-También se implementó una función que interpreta estos valores para identificar aproximadamente si el teléfono está plano, vertical o en posición horizontal.
+El acelerómetro permite observar los ejes X, Y y Z y la orientación aproximada del teléfono desde su pantalla de prueba.
 
-Esta actividad permitió comprender mejor el funcionamiento de los sensores Android y cómo se pueden utilizar junto con Jetpack Compose para agregar nuevas funciones a una aplicación móvil.
+También se incorporó un límite de cinco segundos y la liberación del recurso al pausar la aplicación o salir de la pantalla. Esto permitió comprender la importancia de registrar un sensor solamente cuando se necesita y detener su escucha al terminar.
 
 ## Autor
 
