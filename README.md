@@ -451,6 +451,9 @@ Fue necesario separar la lista de sensores de la pantalla donde se realiza cada 
 
 También se agregó un límite de cinco segundos con `Handler` y una función `detener` que libera el listener. El ciclo de vida y `onDispose` permiten detener la lectura cuando la pantalla deja de usarse.
 
+### Uso de Logcat y Callbacks
+Se agregaron callbacks en MainActivity.kt para observar el ciclo de vida de la aplicación con Logcat.
+
 ## Tecnologías utilizadas
 
 - Kotlin.
