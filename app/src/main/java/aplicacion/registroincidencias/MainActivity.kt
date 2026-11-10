@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
 fun RegistroIncidenciasApp() {
 
     // -----------------------------------------
-    // Variables de estado
+    // Variables de estado de campos
     // -----------------------------------------
 
     var titulo by rememberSaveable {
